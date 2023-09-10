@@ -60,6 +60,14 @@ public interface IFileDetector {
         }
     }
 
+    default boolean justInstall() {
+        return System.getProperty("forgewrapper.justInstall") != null;
+    }
+
+    default boolean justLaunch() {
+        return System.getProperty("forgewrapper.justLaunch") != null;
+    }
+
     /**
      * @param forgeGroup Forge package group (e.g. net.minecraftforge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).

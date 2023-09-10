@@ -27,7 +27,7 @@ public class Main {
         } catch (Throwable ignored) {
             // Avoid this bunch of hacks that nuke the whole wrapper.
         }
-        if (!detector.checkExtraFiles(forgeGroup, forgeFullVersion)) {
+        if (!detector.justLaunch() && !detector.checkExtraFiles(forgeGroup, forgeFullVersion)) {
             System.out.println("Some extra libraries are missing! Running the installer to generate them now.");
 
             // Check installer jar.
@@ -42,10 +42,10 @@ public class Main {
                 throw new RuntimeException("Unable to detect the Minecraft jar!");
             }
 
-            try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[] {
-                Main.class.getProtectionDomain().getCodeSource().getLocation(),
-                Launcher.class.getProtectionDomain().getCodeSource().getLocation(),
-                installerJar.toUri().toURL()
+            try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
+                    Main.class.getProtectionDomain().getCodeSource().getLocation(),
+                    Launcher.class.getProtectionDomain().getCodeSource().getLocation(),
+                    installerJar.toUri().toURL()
             }, ModuleUtil.getPlatformClassLoader())) {
                 Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
                 if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
@@ -54,7 +54,11 @@ public class Main {
             }
         }
 
+        if (detector.justInstall()) {
+            return;
+        }
+
         Class<?> mainClass = ModuleUtil.setupBootstrapLauncher(Class.forName(detector.getMainClass(forgeGroup, forgeFullVersion)));
-        mainClass.getMethod("main", String[].class).invoke(null, new Object[] { args });
+        mainClass.getMethod("main", String[].class).invoke(null, new Object[]{args});
     }
 }
