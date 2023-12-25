@@ -3,19 +3,19 @@ package io.github.zekerzhayard.forgewrapper.installer.detector;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-public class MultiMCFileDetector implements IFileDetector {
+public class ColorMCFileDetector implements IFileDetector {
     protected Path libraryDir = null;
     protected Path installerJar = null;
     protected Path minecraftJar = null;
 
     @Override
     public String name() {
-        return "MultiMC";
+        return "ColorMC";
     }
 
     @Override
     public boolean enabled(HashMap<String, IFileDetector> others) {
-        return others.size() == 0;
+        return others.isEmpty();
     }
 
     @Override
@@ -45,7 +45,7 @@ public class MultiMCFileDetector implements IFileDetector {
     public Path getMinecraftJar(String mcVersion) {
         Path path = IFileDetector.super.getMinecraftJar(mcVersion);
         if (path == null) {
-            return this.minecraftJar != null ? this.minecraftJar : (this.minecraftJar = this.getLibraryDir().resolve("com").resolve("mojang").resolve("minecraft").resolve(mcVersion).resolve("minecraft-" + mcVersion + "-client.jar").toAbsolutePath());
+            return this.minecraftJar != null ? this.minecraftJar : (this.minecraftJar = this.getLibraryDir().resolve("net").resolve("minecraft").resolve("client").resolve(mcVersion).resolve("client-" + mcVersion + ".jar").toAbsolutePath());
         }
         return path;
     }

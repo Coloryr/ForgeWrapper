@@ -37,6 +37,7 @@ public interface IFileDetector {
 
     /**
      * If there are two or more detectors are enabled, an exception will be thrown. Removing anything from the map is in vain.
+     *
      * @param others Other detectors.
      * @return True represents enabled.
      */
@@ -59,8 +60,8 @@ public interface IFileDetector {
     }
 
     /**
-     * @param forgeGroup Forge package group (e.g. net.minecraftforge).
-     * @param forgeArtifact Forge package artifact (e.g. forge).
+     * @param forgeGroup       Forge package group (e.g. net.minecraftforge).
+     * @param forgeArtifact    Forge package artifact (e.g. forge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).
      * @return The forge installer jar path. It can also be defined by JVM argument "-Dforgewrapper.installer=&lt;installer-path&gt;".
      */
@@ -85,8 +86,8 @@ public interface IFileDetector {
     }
 
     /**
-     * @param forgeGroup Forge package group (e.g. net.minecraftforge).
-     * @param forgeArtifact Forge package artifact (e.g. forge).
+     * @param forgeGroup       Forge package group (e.g. net.minecraftforge).
+     * @param forgeArtifact    Forge package artifact (e.g. forge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).
      * @return The list of jvm args.
      */
@@ -115,8 +116,8 @@ public interface IFileDetector {
     }
 
     /**
-     * @param forgeGroup Forge package group (e.g. net.minecraftforge).
-     * @param forgeArtifact Forge package artifact (e.g. forge).
+     * @param forgeGroup       Forge package group (e.g. net.minecraftforge).
+     * @param forgeArtifact    Forge package artifact (e.g. forge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).
      * @return The main class.
      */
@@ -125,8 +126,8 @@ public interface IFileDetector {
     }
 
     /**
-     * @param forgeGroup Forge package group (e.g. net.minecraftforge).
-     * @param forgeArtifact Forge package artifact (e.g. forge).
+     * @param forgeGroup       Forge package group (e.g. net.minecraftforge).
+     * @param forgeArtifact    Forge package artifact (e.g. forge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).
      * @return The json object in the-installer-jar-->install_profile.json-->data-->xxx-->client.
      */
@@ -142,8 +143,8 @@ public interface IFileDetector {
                 ZipEntry ze = zf.getEntry(entry);
                 if (ze != null) {
                     try (
-                        InputStream is = zf.getInputStream(ze);
-                        InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)
+                            InputStream is = zf.getInputStream(ze);
+                            InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)
                     ) {
                         return function.apply(new JsonParser().parse(isr));
                     }
@@ -159,8 +160,9 @@ public interface IFileDetector {
 
     /**
      * Check all cached files.
-     * @param forgeGroup Forge package group (e.g. net.minecraftforge).
-     * @param forgeArtifact Forge package artifact (e.g. forge).
+     *
+     * @param forgeGroup       Forge package group (e.g. net.minecraftforge).
+     * @param forgeArtifact    Forge package artifact (e.g. forge).
      * @param forgeFullVersion Forge full version (e.g. 1.14.4-28.2.0).
      * @return True represents all files are ready.
      */
@@ -189,10 +191,10 @@ public interface IFileDetector {
                         String classifier = nullToDefault(m.group("classifier"), "");
                         String type = nullToDefault(m.group("type"), "jar");
                         libsMap.put(entry.getKey(), this.getLibraryDir()
-                            .resolve(groupId.replace('.', File.separatorChar))
-                            .resolve(artifactId)
-                            .resolve(version)
-                            .resolve(artifactId + "-" + version + (classifier.isEmpty() ? "" : "-") + classifier + "." + type).toAbsolutePath());
+                                .resolve(groupId.replace('.', File.separatorChar))
+                                .resolve(artifactId)
+                                .resolve(version)
+                                .resolve(artifactId + "-" + version + (classifier.isEmpty() ? "" : "-") + classifier + "." + type).toAbsolutePath());
                     }
                 }
             }
@@ -203,7 +205,7 @@ public interface IFileDetector {
                 String sha1 = "";
                 String entryKey = entry.getKey();
                 // NOTE: only used on servers, it's busted
-                if(entryKey.equals("MC_UNPACKED")) {
+                if (entryKey.equals("MC_UNPACKED")) {
                     continue;
                 }
                 /**
@@ -211,7 +213,7 @@ public interface IFileDetector {
                  * We ignore the hash of the client file and instead just rely on it being 'correct, maybe' if it's present at all
                  */
                 System.out.println("Checking: " + entryKey);
-                if(!entryKey.equals("PATCHED")) {
+                if (!entryKey.equals("PATCHED")) {
                     sha1 = hashMap.get(entryKey + "_SHA");
                 }
                 checked = checkExtraFile(entry.getValue(), sha1);
@@ -228,6 +230,7 @@ public interface IFileDetector {
 
     /**
      * Check the exact file.
+     *
      * @param path The path of the file to check.
      * @param sha1 The sha1 defined in installer.
      * @return True represents the file is ready.

@@ -23,7 +23,7 @@ public class DetectorLoader {
                     temp = detector.getValue();
                 }
             } else if (detector.getValue().enabled(others)) {
-                throw new RuntimeException("There are two or more file detectors are enabled! (" + temp.toString() + ", " + detector.toString() + ")");
+                throw new RuntimeException("There are two or more file detectors are enabled! (" + temp.toString() + ", " + detector + ")");
             }
         }
 

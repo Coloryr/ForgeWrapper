@@ -17,14 +17,14 @@ public class InstallerV1 extends AbstractInstaller {
 
     @Override
     public boolean runClientInstall(Install profile, ProgressCallback monitor, File libraryDir, File minecraftJar, File installerJar) {
-        return new ClientInstall4MultiMC(profile, monitor, libraryDir, minecraftJar).run(null, input -> true, installerJar);
+        return new ClientInstall4ColorMC(profile, monitor, libraryDir, minecraftJar).run(null, input -> true, installerJar);
     }
 
-    public static class ClientInstall4MultiMC extends ClientInstall {
+    public static class ClientInstall4ColorMC extends ClientInstall {
         protected File libraryDir;
         protected File minecraftJar;
 
-        public ClientInstall4MultiMC(Install profile, ProgressCallback monitor, File libraryDir, File minecraftJar) {
+        public ClientInstall4ColorMC(Install profile, ProgressCallback monitor, File libraryDir, File minecraftJar) {
             super(profile instanceof InstallV1 ? (InstallV1) profile : new InstallV1(profile), monitor);
             this.libraryDir = libraryDir;
             this.minecraftJar = minecraftJar;
