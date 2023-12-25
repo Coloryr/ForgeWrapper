@@ -34,7 +34,7 @@ public class Main {
         } catch (Throwable ignored) {
             // Avoid this bunch of hacks that nuke the whole wrapper.
         }
-        if (!detector.justLaunch() && !detector.checkExtraFiles(forgeGroup, forgeFullVersion)) {
+        if (!detector.justLaunch() && !detector.checkExtraFiles(forgeGroup, forgeArtifact, forgeFullVersion)) {
             System.out.println("Some extra libraries are missing! Running the installer to generate them now.");
 
             // Check installer jar.
@@ -49,13 +49,27 @@ public class Main {
                 throw new RuntimeException("Unable to detect the Minecraft jar!");
             }
 
-            try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
-                    Main.class.getProtectionDomain().getCodeSource().getLocation(),
-                    installerJar.toUri().toURL()
-            }, ModuleUtil.getPlatformClassLoader())) {
-                Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
-                if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
-                    return;
+            try {
+                URL cpw = cpw.mods.modlauncher.Launcher.class.getProtectionDomain().getCodeSource().getLocation();
+                try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
+                        Main.class.getProtectionDomain().getCodeSource().getLocation(),
+                        cpw,
+                        installerJar.toUri().toURL()
+                }, ModuleUtil.getPlatformClassLoader())) {
+                    Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
+                    if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
+                        return;
+                    }
+                }
+            } catch (NoClassDefFoundError e) {
+                try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
+                        Main.class.getProtectionDomain().getCodeSource().getLocation(),
+                        installerJar.toUri().toURL()
+                }, ModuleUtil.getPlatformClassLoader())) {
+                    Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
+                    if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
+                        return;
+                    }
                 }
             }
         }

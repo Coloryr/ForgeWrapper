@@ -47,16 +47,7 @@ public interface IFileDetector {
      */
     default Path getLibraryDir() {
         String libraryDir = System.getProperty("forgewrapper.librariesDir");
-        //if (libraryDir != null) {
-            return Paths.get(libraryDir).toAbsolutePath();
-        //}
-//        try {
-//            Path launcher = Paths.get(Launcher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toAbsolutePath();
-//            //              /<version>  /modlauncher/mods       /cpw        /libraries
-//            return launcher.getParent().getParent().getParent().getParent().getParent().toAbsolutePath();
-//        } catch (URISyntaxException e) {
-//            throw new RuntimeException(e);
-//        }
+        return Paths.get(libraryDir).toAbsolutePath();
     }
 
     default boolean justInstall() {
