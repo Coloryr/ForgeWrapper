@@ -236,7 +236,13 @@ public interface IFileDetector {
      * @return True represents the file is ready.
      */
     static boolean checkExtraFile(Path path, String sha1) {
-        return sha1 == null || sha1.isEmpty() || (isFile(path) && sha1.toLowerCase(Locale.ENGLISH).equals(getFileSHA1(path)));
+        if (!isFile(path)) {
+            return false;
+        }
+        if(sha1 == null || sha1.isEmpty()) {
+            return true;
+        }
+        return sha1.toLowerCase(Locale.ENGLISH).equals(getFileSHA1(path));
     }
 
     static boolean isFile(Path path) {
