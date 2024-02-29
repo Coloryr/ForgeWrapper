@@ -2,6 +2,7 @@ package io.github.zekerzhayard.forgewrapper.installer.util;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.function.Predicate;
 
 import net.minecraftforge.installer.actions.ClientInstall;
 import net.minecraftforge.installer.actions.PostProcessors;
@@ -31,15 +32,10 @@ public class InstallerV1 extends AbstractInstaller {
             this.minecraftJar = minecraftJar;
         }
 
-        public boolean runClientInstall(Install profile, ProgressCallback monitor, File libraryDir, File minecraftJar,
-                File installerJar) {
-            PostProcessors processors = new PostProcessors(
-                    profile instanceof InstallV1 ? (InstallV1) profile : new InstallV1(profile), true, monitor);
-
+        public boolean run(File target, Predicate<String> optionals, File installer) {
             try {
                 Method method = processors.getClass().getMethod("process", File.class, File.class, File.class, File.class);
-                Object result = method.invoke(processors, libraryDir, minecraftJar, libraryDir.getParentFile(),
-                        installerJar);
+                Object result = method.invoke(processors, this.libraryDir, this.minecraftJar, this.libraryDir.getParentFile(), installer);
 
                 if (method.getReturnType() == boolean.class)
                     return (boolean) result;
@@ -48,5 +44,6 @@ public class InstallerV1 extends AbstractInstaller {
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException(e);
             }
+        }
     }
 }
