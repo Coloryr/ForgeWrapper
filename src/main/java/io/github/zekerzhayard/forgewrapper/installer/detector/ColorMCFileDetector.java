@@ -34,7 +34,8 @@ public class ColorMCFileDetector implements IFileDetector {
                 Path installerBase = this.getLibraryDir();
                 for (String dir : forgeGroup.split("\\."))
                     installerBase = installerBase.resolve(dir);
-                this.installerJar = installerBase.resolve(forgeArtifact).resolve(forgeFullVersion).resolve(forgeArtifact + "-" + forgeFullVersion + "-installer.jar").toAbsolutePath();
+                this.installerJar = installerBase.resolve(forgeArtifact).resolve(forgeFullVersion)
+                        .resolve(forgeArtifact + "-" + forgeFullVersion + "-installer.jar").toAbsolutePath();
             }
             return this.installerJar;
         }
