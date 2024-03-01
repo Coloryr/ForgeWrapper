@@ -3,8 +3,10 @@ package io.github.zekerzhayard.forgewrapper.installer;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,6 +15,7 @@ import io.github.zekerzhayard.forgewrapper.installer.detector.IFileDetector;
 import io.github.zekerzhayard.forgewrapper.installer.util.ModuleUtil;
 
 public class Main {
+    @SuppressWarnings("unchecked")
     public static void main(String[] args) throws Throwable {
         // --fml.neoForgeVersion 20.2.20-beta --fml.fmlVersion 1.0.2 --fml.mcVersion 1.20.2 --fml.neoFormVersion 20231019.002635 --launchTarget forgeclient
 
@@ -29,48 +32,44 @@ public class Main {
         String forgeFullVersion = isNeoForge ? forgeVersion : mcVersion + "-" + forgeVersion;
 
         IFileDetector detector = DetectorLoader.loadDetector();
-        try {
-            Bootstrap.bootstrap(detector.getJvmArgs(forgeGroup, forgeArtifact, forgeFullVersion), detector.getMinecraftJar(mcVersion).getFileName().toString(), detector.getLibraryDir().toAbsolutePath().toString());
-        } catch (Throwable ignored) {
-            // Avoid this bunch of hacks that nuke the whole wrapper.
-        }
-        if (!detector.justLaunch() && !detector.checkExtraFiles(forgeGroup, forgeArtifact, forgeFullVersion)) {
-            System.out.println("Some extra libraries are missing! Running the installer to generate them now.");
-
+        if (!detector.justLaunch()) {
             // Check installer jar.
             Path installerJar = detector.getInstallerJar(forgeGroup, forgeArtifact, forgeFullVersion);
-            if (!IFileDetector.isFile(installerJar)) {
+            if (!isFile(installerJar)) {
                 throw new RuntimeException("Unable to detect the forge installer!");
             }
 
             // Check vanilla Minecraft jar.
             Path minecraftJar = detector.getMinecraftJar(mcVersion);
-            if (!IFileDetector.isFile(minecraftJar)) {
+            if (!isFile(minecraftJar)) {
                 throw new RuntimeException("Unable to detect the Minecraft jar!");
             }
 
-            try {
-                URL cpw = cpw.mods.modlauncher.Launcher.class.getProtectionDomain().getCodeSource().getLocation();
-                try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
-                        Main.class.getProtectionDomain().getCodeSource().getLocation(),
-                        cpw,
-                        installerJar.toUri().toURL()
-                }, ModuleUtil.getPlatformClassLoader())) {
-                    Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
-                    if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
-                        return;
-                    }
+            try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[] {
+                Main.class.getProtectionDomain().getCodeSource().getLocation(),
+                Launcher.class.getProtectionDomain().getCodeSource().getLocation(),
+                installerJar.toUri().toURL()
+            }, ModuleUtil.getPlatformClassLoader())) {
+                Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
+
+                Map<String, Object> data = (Map<String, Object>) installer.getMethod("getData", File.class)
+                    .invoke(null, detector.getLibraryDir().toFile());
+                try {
+                    Bootstrap.bootstrap((String[]) data.get("jvmArgs"), detector.getMinecraftJar(mcVersion).getFileName().toString(), 
+                        detector.getLibraryDir().toAbsolutePath().toString());
+                } catch (Throwable t) {
+                    // Avoid this bunch of hacks that nuke the whole wrapper.
+                    t.printStackTrace();
                 }
-            } catch (NoClassDefFoundError e) {
-                try (URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{
-                        Main.class.getProtectionDomain().getCodeSource().getLocation(),
-                        installerJar.toUri().toURL()
-                }, ModuleUtil.getPlatformClassLoader())) {
-                    Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
-                    if (!(boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile())) {
-                        return;
-                    }
+
+                if (!((boolean) installer.getMethod("install", File.class, File.class, File.class)
+                    .invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile()))) {
+                    return;
                 }
+
+                ModuleUtil.setupClassPath(detector.getLibraryDir(), (List<String>) data.get("extraLibraries"));
+                Class<?> mainClass = ModuleUtil.setupBootstrapLauncher(Class.forName((String) data.get("mainClass")));
+                mainClass.getMethod("main", String[].class).invoke(null, new Object[] {args});
             }
         }
 
@@ -81,5 +80,9 @@ public class Main {
         ModuleUtil.setupClassPath(detector.getLibraryDir(), detector.getExtraLibraries(forgeGroup, forgeArtifact, forgeFullVersion));
         Class<?> mainClass = ModuleUtil.setupBootstrapLauncher(Class.forName(detector.getMainClass(forgeGroup, forgeArtifact, forgeFullVersion)));
         mainClass.getMethod("main", String[].class).invoke(null, new Object[]{args});
+    }
+
+    private static boolean isFile(Path path) {
+        return path != null && Files.isRegularFile(path);
     }
 }
